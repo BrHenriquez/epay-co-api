@@ -3,7 +3,7 @@ import { generateToken } from '../utils/helpers.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Constants for reusability
-const RESPONSE_SUCCESS = (res, message, data = {}) => res.status(200).json({ success: true, message, ...data });
+const RESPONSE_SUCCESS = (res, message, data = {}) => res.status(200).json({ success: true, message, data });
 const RESPONSE_ERROR = (res, error, status = 400) => res.status(status).json({ success: false, error: error.message });
 
 // Validation function to keep main logic clean
@@ -20,6 +20,16 @@ export const registerClient = async (req, res) => {
         const client = new Client({ document, name, email, phone });
         await client.save();
         RESPONSE_SUCCESS(res, 'Client registered successfully');
+    } catch (error) {
+        RESPONSE_ERROR(res, error);
+    }
+};
+
+export const getAllClients = async (req, res) => {
+    try {
+        const clients = await Client.find();
+        if(!clients) RESPONSE_ERROR(res, 'There is no clients');
+        RESPONSE_SUCCESS(res, 'Client fetched successfully', clients);
     } catch (error) {
         RESPONSE_ERROR(res, error);
     }
@@ -61,10 +71,10 @@ export const initiatePayment = async (req, res) => {
 };
 
 export const getBalance = async (req, res) => {
-    const { document, phone } = req.body;
+    const { document, phone } = req.query;
     try {
         validateRequest({ document, phone });
-        const client = await Client.findOne({ document, phone });
+        const client = await Client.findOne({ document, phone: Number(phone) });
         if (!client) throw new Error('Client not found');
 
         RESPONSE_SUCCESS(res, 'Balance inquiry successful', { balance: client.balance });

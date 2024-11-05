@@ -1,7 +1,11 @@
 import express from 'express';
 import clientRoutes from './src/routes/clientRoutes.js';
 import { connectToDb } from './src/server.js';
+import dotenv from 'dotenv';
+import cors from 'cors';
 
+
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -9,6 +13,7 @@ const PORT = process.env.PORT || 4000;
 connectToDb();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
 // Routes
