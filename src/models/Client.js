@@ -6,13 +6,21 @@ const sessionTokenSchema = new mongoose.Schema({
   expiresAt: { type: Date, required: true }
 }, { _id: false }); // Disable _id for subdocuments
 
+const balanceHistory = new mongoose.Schema({
+  amount: { type: Number, default: 0, min: 0 },
+  date: { type: Date, required: true },
+  balance: { type: Number, default: 0, min: 0 },
+  type: { type: String, required: true }
+}, { _id: true });
+
 const clientSchema = new mongoose.Schema({
   document: { type: String, required: true, unique: true, trim: true },
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, trim: true, lowercase: true, match: /.+\@.+\..+/ },
   phone: { type: String, required: true, trim: true, match: /^[0-9]{10,15}$/ },
   balance: { type: Number, default: 0, min: 0 },
-  sessionTokens: [sessionTokenSchema]
+  sessionTokens: [sessionTokenSchema],
+  balanceHistory: [balanceHistory]
 }, { timestamps: true }); // Adds createdAt and updatedAt timestamps
 
 clientSchema.methods = {
