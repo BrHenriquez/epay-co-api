@@ -1,26 +1,15 @@
 import Client from '../models/Client.js';
-import { generateShortToken, logger, sendMail } from '../utils/helpers.js';
+import { generateShortToken, logger, RESPONSE_ERROR, RESPONSE_SUCCESS, sendMail, validateRequest } from '../utils/helpers.js';
 import { v4 as uuidv4 } from 'uuid';
-
-// Constants for reusability
-const RESPONSE_SUCCESS = (res, message, data = {}) => res.status(200).json({ success: true, message, data });
-const RESPONSE_ERROR = (res, error, status = 400) => res.status(status).json({ success: false, error: error.message });
-
-// Validation function to keep main logic clean
-const validateRequest = ({ document, name, email, phone, amount }) => {
-    if (!document || !phone) throw new Error('Document and phone are required');
-    if (name && !email) throw new Error('Email is required for registration');
-    if (amount && amount <= 0) throw new Error('Amount must be positive');
-};
 
 export const registerClient = async (req, res) => {
     const { document, name, email, phone } = req.body;
     try {
-        logger('registerClient', `Registering client: ${client.name}`);
         validateRequest({ document, name, email, phone });
         const client = new Client({ document, name, email, phone });
-        logger('registerClient', `Client registered - ${client.name}`);
+        logger('registerClient', `Registering client: ${client.name}`);
         await client.save();
+        logger('registerClient', `Client registered - ${client.name}`);
         RESPONSE_SUCCESS(res, 'Client registered successfully');
     } catch (error) {
         RESPONSE_ERROR(res, error);
@@ -29,7 +18,7 @@ export const registerClient = async (req, res) => {
 
 export const getAllClients = async (req, res) => {
     try {
-        const clients = await Client.find();
+        const clients = await Client.find({}, { sessionTokens: 0 });
         if (!clients) RESPONSE_ERROR(res, 'There is no clients');
         logger('getAllClients', 'Client fetched successfully');
         RESPONSE_SUCCESS(res, 'Client fetched successfully', clients);
@@ -84,7 +73,7 @@ export const initiatePayment = async (req, res) => {
 
 export const confirmPayment = async (req, res) => {
     try {
-        const { token, sessionId, document } = req.body;
+        const { token, sessionId, document, amount } = req.body;
         const client = await Client.findOne({ document });
         if (client.sessionTokens.length > 0) {
             const lastSessionToken = client.sessionTokens.at(-1);
@@ -116,3 +105,14 @@ export const getBalance = async (req, res) => {
         RESPONSE_ERROR(res, error);
     }
 };
+
+export const removeClient = async (req, res) => {
+    try {
+        const { id } = req.body;
+        await Client.deleteOne({ id });
+        logger('removeClient', 'Client deleted successfully');
+        RESPONSE_SUCCESS(res, 'Client deleted successfully');
+    } catch (error) {
+        RESPONSE_ERROR(res, error);
+    }
+}

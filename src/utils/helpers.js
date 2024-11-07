@@ -42,3 +42,14 @@ export const sendMail = async (client, verificationCode) => {
         console.error('could not send token email', error);
     }
 }
+
+// Constants for reusability
+export const RESPONSE_SUCCESS = (res, message, data = {}) => res.status(200).json({ success: true, message, data });
+export const RESPONSE_ERROR = (res, error, status = 400) => res.status(status).json({ success: false, error: error.message });
+
+// Validation function to keep main logic clean
+export const validateRequest = ({ document, name, email, phone, amount }) => {
+    if (!document || !phone) throw new Error('Document and phone are required');
+    if (name && !email) throw new Error('Email is required for registration');
+    if (amount && amount <= 0) throw new Error('Amount must be positive');
+};
