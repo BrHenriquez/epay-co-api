@@ -83,6 +83,8 @@ export const confirmPayment = async (req, res) => {
                 client.balanceHistory.push({ amount, date: new Date(), balance: client.balance, type: 'expense' })
                 await client.save();
                 RESPONSE_SUCCESS(res, 'Payment was successful', { balance: client.balance, balanceHistory: client.balanceHistory });
+            } else {
+                RESPONSE_ERROR(res, { message: 'Code did not match' });
             }
         } else {
             RESPONSE_ERROR(res, 'Client does not have a session tokens');
